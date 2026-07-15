@@ -185,7 +185,9 @@ export default function Home() {
   const [submittedPreparation, setSubmittedPreparation] = useState('');
   const [listeningField, setListeningField] = useState('');
   const [speechMessage, setSpeechMessage] = useState('');
+  const [foodImage, setFoodImage] = useState(null);
   const recognitionRef = useRef(null);
+  const imageInputRef = useRef(null);
   const result = useMemo(
     () => getFoodResult(submittedFood, submittedDescription, submittedPreparation),
     [submittedFood, submittedDescription, submittedPreparation],
@@ -278,6 +280,42 @@ export default function Home() {
     }
   }
 
+  function handleFoodImage(event) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setSpeechMessage('Please choose an image file.');
+      event.target.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      setFoodImage({
+        name: file.name,
+        src: reader.result,
+      });
+      setSpeechMessage('Food photo added. Type or say the food name, then check the food.');
+    };
+    reader.onerror = () => {
+      setSpeechMessage('The food photo could not be loaded. Please try another image.');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function removeFoodImage() {
+    setFoodImage(null);
+    if (imageInputRef.current) {
+      imageInputRef.current.value = '';
+    }
+    setSpeechMessage('Food photo removed.');
+  }
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-orange-100 via-white to-lime-100 px-4 py-10">
       <section className="mx-auto flex max-w-3xl flex-col items-center text-center">
@@ -309,6 +347,48 @@ export default function Home() {
               />
               <VoiceInputButton field="food" label="food item" listeningField={listeningField} onStart={startVoiceInput} />
             </div>
+
+            <div className="mt-3">
+              <input
+                id="food-image"
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleFoodImage}
+                ref={imageInputRef}
+                className="peer sr-only"
+              />
+              <label
+                htmlFor="food-image"
+                className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-bold text-orange-900 outline-none motion-safe:transition hover:bg-orange-100 peer-focus-visible:ring-2 peer-focus-visible:ring-orange-500 peer-focus-visible:ring-offset-2"
+              >
+                <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <path d="M14.5 4 16 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h3l1.5-3h5Z" />
+                  <circle cx="12" cy="13" r="3" />
+                </svg>
+                Take or choose a food photo
+              </label>
+            </div>
+
+            {foodImage ? (
+              <div className="mt-3 flex items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                <img
+                  src={foodImage.src}
+                  alt="Selected food preview"
+                  className="size-20 rounded-xl object-cover"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-slate-700">{foodImage.name}</p>
+                  <button
+                    type="button"
+                    onClick={removeFoodImage}
+                    className="mt-2 rounded-lg px-2 py-1 text-sm font-bold text-red-700 outline-none hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-500"
+                  >
+                    Remove photo
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </div>
 
           <div>
