@@ -1,7 +1,7 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'Junk or No',
+  title: 'Junk or No?',
   description: 'A beginner-friendly food checker that identifies junk food.',
 };
 
