@@ -1,0 +1,1 @@
+A simple food app that tells whether a food item is junk or healthy. 
