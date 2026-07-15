@@ -186,6 +186,7 @@ export default function Home() {
   const [listeningField, setListeningField] = useState('');
   const [speechMessage, setSpeechMessage] = useState('');
   const [foodImage, setFoodImage] = useState(null);
+  const [isRecognizing, setIsRecognizing] = useState(false);
   const recognitionRef = useRef(null);
   const imageInputRef = useRef(null);
   const result = useMemo(
@@ -280,6 +281,31 @@ export default function Home() {
     }
   }
 
+  async function recognizeFood(image) {
+    setIsRecognizing(true);
+    setSpeechMessage('Identifying the food in your photo…');
+
+    try {
+      const response = await fetch('/api/recognize-food', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Food recognition failed.');
+      }
+
+      setFood(data.food);
+      setSpeechMessage(`Recognized “${data.food}.” You can correct the name before checking it.`);
+    } catch (error) {
+      setSpeechMessage(error.message || 'Food recognition failed. Enter the food name manually.');
+    } finally {
+      setIsRecognizing(false);
+    }
+  }
+
   function handleFoodImage(event) {
     const file = event.target.files?.[0];
 
@@ -300,7 +326,7 @@ export default function Home() {
         name: file.name,
         src: reader.result,
       });
-      setSpeechMessage('Food photo added. Type or say the food name, then check the food.');
+      recognizeFood(reader.result);
     };
     reader.onerror = () => {
       setSpeechMessage('The food photo could not be loaded. Please try another image.');
@@ -310,6 +336,7 @@ export default function Home() {
 
   function removeFoodImage() {
     setFoodImage(null);
+    setIsRecognizing(false);
     if (imageInputRef.current) {
       imageInputRef.current.value = '';
     }
@@ -381,8 +408,16 @@ export default function Home() {
                   <p className="truncate text-sm font-semibold text-slate-700">{foodImage.name}</p>
                   <button
                     type="button"
+                    onClick={() => recognizeFood(foodImage.src)}
+                    disabled={isRecognizing}
+                    className="mt-2 rounded-lg bg-orange-100 px-3 py-1.5 text-sm font-bold text-orange-900 outline-none motion-safe:transition hover:bg-orange-200 focus-visible:ring-2 focus-visible:ring-orange-500 disabled:cursor-wait disabled:opacity-60"
+                  >
+                    {isRecognizing ? 'Identifying…' : 'Identify food'}
+                  </button>
+                  <button
+                    type="button"
                     onClick={removeFoodImage}
-                    className="mt-2 rounded-lg px-2 py-1 text-sm font-bold text-red-700 outline-none hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-500"
+                    className="ml-1 mt-2 rounded-lg px-2 py-1.5 text-sm font-bold text-red-700 outline-none hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-500"
                   >
                     Remove photo
                   </button>
