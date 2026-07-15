@@ -48,6 +48,11 @@ const healthyFoods = [
   'water',
 ];
 
+const foodPairs = junkFoods.map((junkFood, index) => ({
+  junkFood,
+  healthyFood: healthyFoods[index],
+}));
+
 function cleanFoodName(food) {
   return food.trim().toLowerCase();
 }
@@ -122,8 +127,8 @@ export default function Home() {
         <p className="mb-3 rounded-full bg-orange-200 px-4 py-2 text-sm font-semibold text-orange-900">
           Beginner-friendly food checker
         </p>
-        <h1 className="text-5xl font-black tracking-tight text-slate-900 sm:text-6xl">
-          Junk or No
+        <h1 className="beveled-title" aria-label="Junk or No?">
+          JUNK OR NO?
         </h1>
         <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-700">
           Type a food item below and this simple app will tell you if it is commonly thought of as junk food or a healthier choice.
@@ -229,6 +234,24 @@ export default function Home() {
             ))}
           </div>
         </div>
+
+        <section className="mt-8 border-t border-slate-200 pt-8 text-left" aria-labelledby="food-pairs-heading">
+          <h2 id="food-pairs-heading" className="text-lg font-black text-slate-900">
+            Previously added food pairs
+          </h2>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            {foodPairs.map(({ junkFood, healthyFood }) => (
+              <div
+                key={`${junkFood}-${healthyFood}`}
+                className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm"
+              >
+                <span className="font-semibold capitalize text-red-700">{junkFood}</span>
+                <span className="text-slate-400" aria-hidden="true">→</span>
+                <span className="text-right font-semibold capitalize text-green-700">{healthyFood}</span>
+              </div>
+            ))}
+          </div>
+        </section>
       </section>
     </main>
   );

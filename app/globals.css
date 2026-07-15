@@ -14,6 +14,40 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.beveled-title {
+  margin: 0;
+  color: #dbe7ee;
+  font-size: clamp(3rem, 10vw, 5.25rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.015em;
+  -webkit-text-stroke: 1px #627887;
+  text-shadow:
+    -1px -1px 0 #ffffff,
+    -2px -2px 1px #f8fafc,
+    1px 1px 0 #8097a5,
+    2px 2px 0 #5b7280,
+    3px 3px 0 #435966,
+    5px 6px 8px rgb(30 41 59 / 35%);
+}
+
+@supports (-webkit-background-clip: text) {
+  .beveled-title {
+    background: linear-gradient(
+      155deg,
+      #ffffff 4%,
+      #a7bbc7 25%,
+      #eef5f8 45%,
+      #78909f 67%,
+      #dce8ee 84%,
+      #6c8290 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
 button,
 input {
   font: inherit;
