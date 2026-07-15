@@ -122,7 +122,7 @@ export default function Home() {
         <p className="mb-3 rounded-full bg-orange-200 px-4 py-2 text-sm font-semibold text-orange-900">
           Beginner-friendly food checker
         </p>
-        <h1 className="text-5xl font-black tracking-tight text-slate-900 sm:text-6xl">
+        <h1 className="heading-display text-6xl font-black leading-none tracking-[-0.045em] text-slate-900 sm:text-7xl lg:text-8xl">
           Junk or No
         </h1>
         <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-700">
