@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 const junkFoods = [
   'burger',
@@ -153,6 +153,29 @@ function getFoodResult(food, description = '', preparation = '') {
   };
 }
 
+function VoiceInputButton({ field, label, listeningField, onStart }) {
+  const isListening = listeningField === field;
+
+  return (
+    <button
+      type="button"
+      onClick={() => onStart(field)}
+      aria-label={isListening ? `Stop voice input for ${label}` : `Use voice input for ${label}`}
+      aria-pressed={isListening}
+      className={`absolute right-3 top-3 grid size-10 place-items-center rounded-xl outline-none motion-safe:transition focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 ${
+        isListening
+          ? 'animate-pulse bg-red-100 text-red-700 motion-reduce:animate-none'
+          : 'bg-orange-50 text-orange-800 hover:bg-orange-100'
+      }`}
+    >
+      <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3M8 22h8" />
+      </svg>
+    </button>
+  );
+}
+
 export default function Home() {
   const [food, setFood] = useState('');
   const [description, setDescription] = useState('');
@@ -160,6 +183,9 @@ export default function Home() {
   const [submittedFood, setSubmittedFood] = useState('');
   const [submittedDescription, setSubmittedDescription] = useState('');
   const [submittedPreparation, setSubmittedPreparation] = useState('');
+  const [listeningField, setListeningField] = useState('');
+  const [speechMessage, setSpeechMessage] = useState('');
+  const recognitionRef = useRef(null);
   const result = useMemo(
     () => getFoodResult(submittedFood, submittedDescription, submittedPreparation),
     [submittedFood, submittedDescription, submittedPreparation],
@@ -179,6 +205,77 @@ export default function Home() {
     setPreparation('');
     setSubmittedDescription('');
     setSubmittedPreparation('');
+  }
+
+  function startVoiceInput(field) {
+    if (recognitionRef.current) {
+      recognitionRef.current.abort();
+      recognitionRef.current = null;
+
+      if (listeningField === field) {
+        setListeningField('');
+        setSpeechMessage('Voice input stopped.');
+        return;
+      }
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      setSpeechMessage('Voice input is not supported by this browser. Try a current version of Chrome or Edge.');
+      return;
+    }
+
+    const fieldConfig = {
+      food: { label: 'food item', setValue: setFood, append: false },
+      description: { label: 'short description', setValue: setDescription, append: true },
+      preparation: { label: 'how it is made', setValue: setPreparation, append: true },
+    }[field];
+    const recognition = new SpeechRecognition();
+
+    recognition.lang = navigator.language || 'en-US';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setListeningField(field);
+      setSpeechMessage(`Listening for ${fieldConfig.label}…`);
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript.trim();
+      fieldConfig.setValue((currentValue) => (
+        fieldConfig.append && currentValue.trim()
+          ? `${currentValue.trim()} ${transcript}`
+          : transcript
+      ));
+      setSpeechMessage(`Added voice input to ${fieldConfig.label}.`);
+    };
+
+    recognition.onerror = (event) => {
+      const message = event.error === 'not-allowed'
+        ? 'Microphone access was denied. Allow microphone access and try again.'
+        : event.error === 'no-speech'
+          ? 'No speech was detected. Please try again.'
+          : 'Voice input could not be completed. Please try again.';
+      setSpeechMessage(message);
+    };
+
+    recognition.onend = () => {
+      recognitionRef.current = null;
+      setListeningField('');
+    };
+
+    recognitionRef.current = recognition;
+
+    try {
+      recognition.start();
+    } catch {
+      recognitionRef.current = null;
+      setListeningField('');
+      setSpeechMessage('Voice input could not be started. Please try again.');
+    }
   }
 
   return (
@@ -201,43 +298,56 @@ export default function Home() {
             <label htmlFor="food" className="block text-left text-sm font-bold uppercase tracking-wide text-slate-600">
               Food item
             </label>
-            <input
-              id="food"
-              type="text"
-              value={food}
-              onChange={(event) => setFood(event.target.value)}
-              placeholder="Try pizza, apple, soda, or broccoli"
-              className="mt-2 min-h-12 w-full rounded-2xl border border-slate-300 px-4 text-lg outline-none motion-safe:transition focus-visible:border-orange-500 focus-visible:ring-4 focus-visible:ring-orange-100"
-            />
+            <div className="relative mt-2">
+              <input
+                id="food"
+                type="text"
+                value={food}
+                onChange={(event) => setFood(event.target.value)}
+                placeholder="Try pizza, apple, soda, or broccoli"
+                className="min-h-12 w-full rounded-2xl border border-slate-300 py-3 pl-4 pr-16 text-lg outline-none motion-safe:transition focus-visible:border-orange-500 focus-visible:ring-4 focus-visible:ring-orange-100"
+              />
+              <VoiceInputButton field="food" label="food item" listeningField={listeningField} onStart={startVoiceInput} />
+            </div>
           </div>
 
           <div>
             <label htmlFor="description" className="block text-left text-sm font-bold uppercase tracking-wide text-slate-600">
               Short description <span className="font-semibold normal-case tracking-normal text-slate-400">(optional)</span>
             </label>
-            <textarea
-              id="description"
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              placeholder="Example: sweet, salty, fresh, or packaged"
-              rows={3}
-              className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-base outline-none motion-safe:transition focus-visible:border-orange-500 focus-visible:ring-4 focus-visible:ring-orange-100"
-            />
+            <div className="relative mt-2">
+              <textarea
+                id="description"
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                placeholder="Example: sweet, salty, fresh, or packaged"
+                rows={3}
+                className="w-full rounded-2xl border border-slate-300 py-3 pl-4 pr-16 text-base outline-none motion-safe:transition focus-visible:border-orange-500 focus-visible:ring-4 focus-visible:ring-orange-100"
+              />
+              <VoiceInputButton field="description" label="short description" listeningField={listeningField} onStart={startVoiceInput} />
+            </div>
           </div>
 
           <div>
             <label htmlFor="preparation" className="block text-left text-sm font-bold uppercase tracking-wide text-slate-600">
               How it is made <span className="font-semibold normal-case tracking-normal text-slate-400">(optional)</span>
             </label>
-            <textarea
-              id="preparation"
-              value={preparation}
-              onChange={(event) => setPreparation(event.target.value)}
-              placeholder="Example: deep fried, grilled, baked, or steamed"
-              rows={3}
-              className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-base outline-none motion-safe:transition focus-visible:border-orange-500 focus-visible:ring-4 focus-visible:ring-orange-100"
-            />
+            <div className="relative mt-2">
+              <textarea
+                id="preparation"
+                value={preparation}
+                onChange={(event) => setPreparation(event.target.value)}
+                placeholder="Example: deep fried, grilled, baked, or steamed"
+                rows={3}
+                className="w-full rounded-2xl border border-slate-300 py-3 pl-4 pr-16 text-base outline-none motion-safe:transition focus-visible:border-orange-500 focus-visible:ring-4 focus-visible:ring-orange-100"
+              />
+              <VoiceInputButton field="preparation" label="how it is made" listeningField={listeningField} onStart={startVoiceInput} />
+            </div>
           </div>
+
+          <p className="min-h-6 text-sm text-slate-600" role="status" aria-live="polite">
+            {speechMessage}
+          </p>
 
           <button
             type="submit"
