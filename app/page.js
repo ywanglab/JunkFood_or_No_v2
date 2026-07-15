@@ -147,7 +147,7 @@ export default function Home() {
               value={food}
               onChange={(event) => setFood(event.target.value)}
               placeholder="Try pizza, apple, soda, or broccoli"
-              className="mt-2 min-h-12 w-full rounded-2xl border border-slate-300 px-4 text-lg outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
+              className="mt-2 min-h-12 w-full rounded-2xl border border-slate-300 px-4 text-lg outline-none motion-safe:transition focus-visible:border-orange-500 focus-visible:ring-4 focus-visible:ring-orange-100"
             />
           </div>
 
@@ -161,7 +161,7 @@ export default function Home() {
               onChange={(event) => setDescription(event.target.value)}
               placeholder="Example: sweet, salty, fresh, or packaged"
               rows={3}
-              className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-base outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
+              className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-base outline-none motion-safe:transition focus-visible:border-orange-500 focus-visible:ring-4 focus-visible:ring-orange-100"
             />
           </div>
 
@@ -175,13 +175,13 @@ export default function Home() {
               onChange={(event) => setPreparation(event.target.value)}
               placeholder="Example: deep fried, grilled, baked, or steamed"
               rows={3}
-              className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-base outline-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-100"
+              className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-base outline-none motion-safe:transition focus-visible:border-orange-500 focus-visible:ring-4 focus-visible:ring-orange-100"
             />
           </div>
 
           <button
             type="submit"
-            className="min-h-12 w-full rounded-2xl bg-slate-900 px-6 font-bold text-white transition hover:bg-orange-600 focus:outline-none focus:ring-4 focus:ring-orange-200 sm:w-auto"
+            className="min-h-12 w-full rounded-2xl bg-slate-900 px-6 font-bold text-white outline-none motion-safe:transition hover:bg-orange-600 focus-visible:ring-4 focus-visible:ring-orange-300 sm:w-auto"
           >
             Check food
           </button>
@@ -227,7 +227,7 @@ export default function Home() {
                 key={example}
                 type="button"
                 onClick={() => tryExample(example)}
-                className="rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-bold text-orange-900 transition hover:bg-orange-100"
+                className="rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-bold text-orange-900 outline-none motion-safe:transition hover:bg-orange-100 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
               >
                 {example}
               </button>
