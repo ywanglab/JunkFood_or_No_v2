@@ -179,7 +179,7 @@ function VoiceInputButton({ field, label, listeningField, onStart }) {
       onClick={() => onStart(field)}
       aria-label={isListening ? `Stop voice input for ${label}` : `Use voice input for ${label}`}
       aria-pressed={isListening}
-      className={`absolute right-3 top-3 grid size-10 place-items-center rounded-xl outline-none motion-safe:transition focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 ${
+      className={`absolute right-3 grid size-10 place-items-center rounded-xl outline-none motion-safe:transition focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 ${field === 'food' ? 'top-1' : 'top-3'} ${
         isListening
           ? 'animate-pulse bg-red-100 text-red-700 motion-reduce:animate-none'
           : 'bg-orange-50 text-orange-800 hover:bg-orange-100'
@@ -190,6 +190,133 @@ function VoiceInputButton({ field, label, listeningField, onStart }) {
         <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3M8 22h8" />
       </svg>
     </button>
+  );
+}
+
+function TipCalculator() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [cost, setCost] = useState('');
+  const [tipPercent, setTipPercent] = useState('15');
+  const numericCost = Number.parseFloat(cost);
+  const numericPercent = Number.parseFloat(tipPercent);
+  const hasValidCost = Number.isFinite(numericCost) && numericCost > 0;
+  const hasValidPercent = Number.isFinite(numericPercent) && numericPercent >= 0;
+  const hasValidCalculation = hasValidCost && hasValidPercent;
+  const calculatedTip = hasValidCalculation ? numericCost * numericPercent / 100 : 0;
+  const totalAmount = hasValidCalculation ? numericCost + calculatedTip : 0;
+  const presetPercents = [10, 15, 18, 20];
+  const currency = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  });
+
+  return (
+    <div className="mx-auto mt-6 w-full max-w-2xl text-left">
+      <button
+        type="button"
+        onClick={() => setIsOpen((open) => !open)}
+        aria-expanded={isOpen}
+        aria-controls="tip-calculator"
+        className="mx-auto flex min-h-10 items-center gap-2 rounded-full border border-lime-300 bg-lime-50 px-4 py-2 text-sm font-bold text-lime-900 outline-none motion-safe:transition hover:bg-lime-100 focus-visible:ring-2 focus-visible:ring-lime-600 focus-visible:ring-offset-2"
+      >
+        <span aria-hidden="true">$</span>
+        Tip calculator
+      </button>
+
+      {isOpen ? (
+        <section id="tip-calculator" className="mt-4 rounded-3xl border border-lime-200 bg-white p-5 shadow-lg sm:p-6">
+          <h2 className="text-xl font-black text-slate-900">Calculate a tip</h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="meal-cost" className="block text-sm font-bold text-slate-700">Food cost</label>
+              <div className="relative mt-2">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" aria-hidden="true">$</span>
+                <input
+                  id="meal-cost"
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="0.01"
+                  value={cost}
+                  onChange={(event) => setCost(event.target.value)}
+                  placeholder="0.00"
+                  className="min-h-12 w-full rounded-2xl border border-slate-300 py-3 pl-8 pr-4 outline-none focus-visible:border-lime-600 focus-visible:ring-4 focus-visible:ring-lime-100"
+                />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="tip-percent" className="block text-sm font-bold text-slate-700">Tip percent</label>
+              <div className="relative mt-2">
+                <input
+                  id="tip-percent"
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="0.1"
+                  value={tipPercent}
+                  onChange={(event) => setTipPercent(event.target.value)}
+                  className="min-h-12 w-full rounded-2xl border border-slate-300 px-4 py-3 pr-9 outline-none focus-visible:border-lime-600 focus-visible:ring-4 focus-visible:ring-lime-100"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500" aria-hidden="true">%</span>
+              </div>
+            </div>
+
+            {hasValidCost ? (
+              <div className="sm:col-span-2">
+                <p className="text-sm font-bold text-slate-700">Common tip amounts</p>
+                <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {presetPercents.map((percent) => (
+                    <button
+                      key={percent}
+                      type="button"
+                      onClick={() => setTipPercent(String(percent))}
+                      className="rounded-xl border border-lime-200 bg-lime-50 px-3 py-2 text-center outline-none hover:bg-lime-100 focus-visible:ring-2 focus-visible:ring-lime-600"
+                    >
+                      <span className="block text-xs font-bold text-lime-800">{percent}%</span>
+                      <span className="font-black text-slate-900">{currency.format(numericCost * percent / 100)}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            <div>
+              <label htmlFor="tip-amount" className="block text-sm font-bold text-slate-700">Tip amount</label>
+              <div className="relative mt-2">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" aria-hidden="true">$</span>
+                <input
+                  id="tip-amount"
+                  type="text"
+                  value={hasValidCalculation ? calculatedTip.toFixed(2) : ''}
+                  placeholder="0.00"
+                  readOnly
+                  className="min-h-12 w-full rounded-2xl border border-lime-200 bg-lime-50 py-3 pl-8 pr-4 font-black text-lime-950 outline-none"
+                />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="total-amount" className="block text-sm font-bold text-slate-700">Total amount</label>
+              <div className="relative mt-2">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" aria-hidden="true">$</span>
+                <input
+                  id="total-amount"
+                  type="text"
+                  value={hasValidCalculation ? totalAmount.toFixed(2) : ''}
+                  placeholder="0.00"
+                  readOnly
+                  className="min-h-12 w-full rounded-2xl border border-lime-200 bg-lime-50 py-3 pl-8 pr-4 font-black text-lime-950 outline-none"
+                />
+              </div>
+            </div>
+            <p className="sr-only" role="status" aria-live="polite">
+              {hasValidCalculation
+                ? `Tip ${currency.format(calculatedTip)}. Total ${currency.format(totalAmount)}.`
+                : ''}
+            </p>
+          </div>
+        </section>
+      ) : null}
+    </div>
   );
 }
 
@@ -390,6 +517,7 @@ export default function Home() {
         <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-700">
           Type a food item below and this simple app will tell you if it is commonly thought of as junk food or a healthier choice.
         </p>
+        <TipCalculator />
       </section>
 
       <section className="mx-auto mt-10 max-w-2xl rounded-3xl bg-white p-6 shadow-xl ring-1 ring-slate-200 sm:p-8">
