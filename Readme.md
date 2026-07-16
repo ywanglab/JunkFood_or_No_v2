@@ -13,13 +13,10 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) to use the app.
 
-<<<<<<< HEAD
 `npm run build` creates the deployable OpenNext Worker bundle. Wrangler also
 runs `npm run build:cloudflare` before a direct upload, ensuring that the
 required `.open-next/worker.js` and compiled OpenNext configuration exist.
 
-=======
->>>>>>> origin/main
 ## Image recognition
 
 Food-photo recognition uses the Cloudflare Workers AI binding and the
