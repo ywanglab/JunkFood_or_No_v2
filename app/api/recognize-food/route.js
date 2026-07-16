@@ -26,23 +26,20 @@ export async function POST(request) {
 
   try {
     const { env } = getCloudflareContext();
-    const imageBase64 = image.slice(image.indexOf(',') + 1);
     const response = await env.AI.run(
-      '@cf/meta/llama-3.2-11b-vision-instruct',
+      '@cf/moondream/moondream3.1-9B-A2B',
       {
-        messages: [
-          {
-            role: 'user',
-            content: 'Identify the primary food in this image. Reply with only its common English food name in lowercase, using no punctuation or explanation. If no food is visible, reply exactly: unknown',
-          },
-        ],
-        image: imageBase64,
+        task: 'query',
+        image,
+        question: 'Identify the primary food in this image. Reply with only its common English food name in lowercase, using no punctuation or explanation. If no food is visible, reply exactly: unknown',
+        reasoning: false,
+        stream: false,
         max_tokens: 30,
       },
     );
     const responseText = typeof response === 'string'
       ? response
-      : response.response || response.result || response.description;
+      : response.answer || response.caption || response.response || response.result || response.description;
     const food = responseText?.split('\n')[0].replace(/[^a-zA-Z -]/g, '').trim();
 
     if (!food || food.toLowerCase() === 'unknown') {
@@ -55,8 +52,15 @@ export async function POST(request) {
     return NextResponse.json({ food });
   } catch (error) {
     console.error('Cloudflare image recognition request failed:', error);
+    const errorText = error instanceof Error ? error.message.toLowerCase() : '';
+    const publicMessage = errorText.includes('binding') || errorText.includes('undefined')
+      ? 'Image recognition is not configured on this deployment. Redeploy with the Cloudflare AI binding enabled.'
+      : errorText.includes('limit') || errorText.includes('quota') || errorText.includes('429')
+        ? 'The daily image recognition allowance has been used. Please try again after 00:00 UTC.'
+        : 'The image recognition service is temporarily unavailable. Please try again.';
+
     return NextResponse.json(
-      { error: 'The image recognition service is unavailable. Please try again.' },
+      { error: publicMessage },
       { status: 502 },
     );
   }
