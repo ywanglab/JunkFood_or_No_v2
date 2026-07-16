@@ -4,6 +4,71 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const maxImageDataLength = 28_000_000;
 
+function extractText(response) {
+  if (typeof response === 'string') {
+    return response;
+  }
+
+  if (!response || typeof response !== 'object') {
+    return '';
+  }
+
+  for (const key of ['answer', 'caption', 'response', 'result', 'description', 'text']) {
+    const text = extractText(response[key]);
+    if (text) {
+      return text;
+    }
+  }
+
+  return '';
+}
+
+function cleanFoodName(value) {
+  return value
+    ?.split('\n')[0]
+    .split(',')[0]
+    .replace(/[^a-zA-Z -]/g, '')
+    .trim()
+    .toLowerCase();
+}
+
+function decodeImage(image) {
+  const base64 = image.slice(image.indexOf(',') + 1);
+  const binary = atob(base64);
+  return Array.from(binary, (character) => character.charCodeAt(0));
+}
+
+async function recognizeWithMoondream(ai, image) {
+  const response = await ai.run(
+    '@cf/moondream/moondream3.1-9B-A2B',
+    {
+      task: 'query',
+      image,
+      question: 'Identify the primary food in this image. Reply with only its common English food name in lowercase, using no punctuation or explanation. If no food is visible, reply exactly: unknown',
+      reasoning: false,
+      stream: false,
+      max_tokens: 30,
+    },
+  );
+
+  return cleanFoodName(extractText(response));
+}
+
+async function recognizeWithClassifier(ai, image) {
+  const response = await ai.run('@cf/microsoft/resnet-50', {
+    image: decodeImage(image),
+  });
+  const candidatePredictions = Array.isArray(response)
+    ? response
+    : response?.result || response?.output || [];
+  const predictions = Array.isArray(candidatePredictions) ? candidatePredictions : [];
+  const topPrediction = [...predictions].sort(
+    (left, right) => (right.score || 0) - (left.score || 0),
+  )[0];
+
+  return cleanFoodName(topPrediction?.label);
+}
+
 export async function POST(request) {
   let image;
 
@@ -26,23 +91,19 @@ export async function POST(request) {
 
   try {
     const { env } = getCloudflareContext();
-    const response = await env.AI.run(
-      '@cf/moondream/moondream3.1-9B-A2B',
-      {
-        task: 'query',
-        image,
-        question: 'Identify the primary food in this image. Reply with only its common English food name in lowercase, using no punctuation or explanation. If no food is visible, reply exactly: unknown',
-        reasoning: false,
-        stream: false,
-        max_tokens: 30,
-      },
-    );
-    const responseText = typeof response === 'string'
-      ? response
-      : response.answer || response.caption || response.response || response.result || response.description;
-    const food = responseText?.split('\n')[0].replace(/[^a-zA-Z -]/g, '').trim();
+    let food;
 
-    if (!food || food.toLowerCase() === 'unknown') {
+    try {
+      food = await recognizeWithMoondream(env.AI, image);
+    } catch (error) {
+      console.error('Moondream food recognition failed; using classifier fallback:', error);
+    }
+
+    if (!food || food === 'unknown') {
+      food = await recognizeWithClassifier(env.AI, image);
+    }
+
+    if (!food || food === 'unknown') {
       return NextResponse.json(
         { error: 'No food could be identified. Try a clearer photo or enter the name manually.' },
         { status: 422 },

@@ -111,7 +111,7 @@ const healthyFoods = [
 const foodPairs = junkFoods.map((junkFood, index) => ({
   junkFood,
   healthyFood: healthyFoods[index],
-}));
+})).slice(-10);
 
 function cleanFoodName(food) {
   return food.trim().toLowerCase();
@@ -346,9 +346,6 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-orange-100 via-white to-lime-100 px-4 py-10">
       <section className="mx-auto flex max-w-3xl flex-col items-center text-center">
-        <p className="mb-3 rounded-full bg-orange-200 px-4 py-2 text-sm font-semibold text-orange-900">
-          Beginner-friendly food checker
-        </p>
         <h1 className="beveled-title" aria-label="Junk or No?">
           JUNK OR NO?
         </h1>
@@ -406,18 +403,15 @@ export default function Home() {
                 />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-slate-700">{foodImage.name}</p>
-                  <button
-                    type="button"
-                    onClick={() => recognizeFood(foodImage.src)}
-                    disabled={isRecognizing}
-                    className="mt-2 rounded-lg bg-orange-100 px-3 py-1.5 text-sm font-bold text-orange-900 outline-none motion-safe:transition hover:bg-orange-200 focus-visible:ring-2 focus-visible:ring-orange-500 disabled:cursor-wait disabled:opacity-60"
-                  >
-                    {isRecognizing ? 'Identifying…' : 'Identify food'}
-                  </button>
+                  {isRecognizing ? (
+                    <p className="mt-2 text-sm font-bold text-orange-800" role="status">
+                      Identifying food automatically…
+                    </p>
+                  ) : null}
                   <button
                     type="button"
                     onClick={removeFoodImage}
-                    className="ml-1 mt-2 rounded-lg px-2 py-1.5 text-sm font-bold text-red-700 outline-none hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-500"
+                    className="mt-2 rounded-lg px-2 py-1.5 text-sm font-bold text-red-700 outline-none hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-500"
                   >
                     Remove photo
                   </button>
@@ -522,7 +516,7 @@ export default function Home() {
 
         <section className="mt-8 border-t border-slate-200 pt-8 text-left" aria-labelledby="food-pairs-heading">
           <h2 id="food-pairs-heading" className="text-lg font-black text-slate-900">
-            Previously added food pairs
+            Latest 10 food pairs
           </h2>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             {foodPairs.map(({ junkFood, healthyFood }) => (
