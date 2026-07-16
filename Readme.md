@@ -13,10 +13,6 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) to use the app.
 
-For Cloudflare deployment, Wrangler automatically runs `npm run
-build:cloudflare` before uploading the Worker. This generates the required
-`.open-next/worker.js` bundle.
-
 ## Image recognition
 
 Food-photo recognition uses the Cloudflare Workers AI binding and the
