@@ -20,9 +20,6 @@ required `.open-next/worker.js` and compiled OpenNext configuration exist.
 ## Image recognition
 
 Food-photo recognition uses the Cloudflare Workers AI binding and the
-`@cf/meta/llama-3.2-11b-vision-instruct` model. No separate API key is required.
-
-Before the first recognition request, accept Meta's model license in the
-Cloudflare Workers AI dashboard or by making the one-time license-acceptance
-request described in Cloudflare's model documentation. The `AI` binding is
-declared in `wrangler.jsonc` and becomes available after the app is redeployed.
+`@cf/moondream/moondream3.1-9B-A2B` image-to-text model. No separate API key or
+one-time model-license request is required. The `AI` binding is declared in
+`wrangler.jsonc` and becomes available after the app is redeployed.
