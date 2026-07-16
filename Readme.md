@@ -13,9 +13,9 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) to use the app.
 
-For Cloudflare deployment, Wrangler automatically runs `npm run
-build:cloudflare` before uploading the Worker. This generates the required
-`.open-next/worker.js` bundle.
+`npm run build` creates the deployable OpenNext Worker bundle. Wrangler also
+runs `npm run build:cloudflare` before a direct upload, ensuring that the
+required `.open-next/worker.js` and compiled OpenNext configuration exist.
 
 ## Image recognition
 
