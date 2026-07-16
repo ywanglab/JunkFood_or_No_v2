@@ -108,11 +108,6 @@ const healthyFoods = [
   'whole wheat bread',
 ];
 
-const foodPairs = junkFoods.map((junkFood, index) => ({
-  junkFood,
-  healthyFood: healthyFoods[index],
-})).slice(-10);
-
 function cleanFoodName(food) {
   return food.trim().toLowerCase();
 }
@@ -205,6 +200,7 @@ export default function Home() {
   const [submittedFood, setSubmittedFood] = useState('');
   const [submittedDescription, setSubmittedDescription] = useState('');
   const [submittedPreparation, setSubmittedPreparation] = useState('');
+  const [checkedFoods, setCheckedFoods] = useState([]);
   const [listeningField, setListeningField] = useState('');
   const [speechMessage, setSpeechMessage] = useState('');
   const [foodImage, setFoodImage] = useState(null);
@@ -221,6 +217,7 @@ export default function Home() {
     setSubmittedFood(food);
     setSubmittedDescription(description);
     setSubmittedPreparation(preparation);
+    addCheckedFood(food, description, preparation);
   }
 
   function tryExample(example) {
@@ -230,6 +227,25 @@ export default function Home() {
     setPreparation('');
     setSubmittedDescription('');
     setSubmittedPreparation('');
+    addCheckedFood(example);
+  }
+
+  function addCheckedFood(foodName, foodDescription = '', foodPreparation = '') {
+    const checkedResult = getFoodResult(foodName, foodDescription, foodPreparation);
+
+    if (!checkedResult) {
+      return;
+    }
+
+    setCheckedFoods((currentFoods) => [
+      {
+        food: foodName.trim(),
+        title: checkedResult.title,
+        emoji: checkedResult.emoji,
+        styles: checkedResult.styles,
+      },
+      ...currentFoods,
+    ].slice(0, 10));
   }
 
   function startVoiceInput(field) {
@@ -536,22 +552,30 @@ export default function Home() {
           </div>
         </div>
 
-        <section className="mt-8 border-t border-slate-200 pt-8 text-left" aria-labelledby="food-pairs-heading">
-          <h2 id="food-pairs-heading" className="text-lg font-black text-slate-900">
-            Latest 10 food pairs
+        <section className="mt-8 border-t border-slate-200 pt-8 text-left" aria-labelledby="checked-foods-heading">
+          <h2 id="checked-foods-heading" className="text-lg font-black text-slate-900">
+            Latest 10 food items
           </h2>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            {foodPairs.map(({ junkFood, healthyFood }) => (
+          {checkedFoods.length ? (
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              {checkedFoods.map((checkedFood, index) => (
               <div
-                key={`${junkFood}-${healthyFood}`}
-                className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm"
+                key={`${checkedFood.food}-${index}`}
+                className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm ${checkedFood.styles}`}
               >
-                <span className="font-semibold capitalize text-red-700">{junkFood}</span>
-                <span className="text-slate-400" aria-hidden="true">→</span>
-                <span className="text-right font-semibold capitalize text-green-700">{healthyFood}</span>
+                <span className="text-2xl" aria-hidden="true">{checkedFood.emoji}</span>
+                <div className="min-w-0">
+                  <p className="truncate font-bold capitalize">{checkedFood.food}</p>
+                  <p>{checkedFood.title}</p>
+                </div>
               </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-3 text-sm text-slate-500">
+              Checked foods will appear here.
+            </p>
+          )}
         </section>
       </section>
     </main>
