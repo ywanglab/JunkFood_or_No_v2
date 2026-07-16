@@ -117,6 +117,28 @@ function cleanFoodName(food) {
   return food.trim().toLowerCase();
 }
 
+function pluralizeFoodName(food) {
+  const words = food.split(' ');
+  const lastWord = words.pop();
+  let pluralLastWord;
+
+  if (/[^aeiou]y$/.test(lastWord)) {
+    pluralLastWord = `${lastWord.slice(0, -1)}ies`;
+  } else if (/(s|x|z|ch|sh)$/.test(lastWord)) {
+    pluralLastWord = `${lastWord}es`;
+  } else {
+    pluralLastWord = `${lastWord}s`;
+  }
+
+  return [...words, pluralLastWord].join(' ');
+}
+
+function isListedFood(food, foodList) {
+  return foodList.some((listedFood) => (
+    food === listedFood || food === pluralizeFoodName(listedFood)
+  ));
+}
+
 function getFoodResult(food, description = '', preparation = '') {
   const cleanedFood = cleanFoodName(food);
   const details = `${description} ${preparation}`.toLowerCase();
@@ -127,7 +149,7 @@ function getFoodResult(food, description = '', preparation = '') {
     return null;
   }
 
-  if (junkFoods.includes(cleanedFood) || hasJunkPreparation) {
+  if (isListedFood(cleanedFood, junkFoods) || hasJunkPreparation) {
     return {
       title: 'Junk food',
       emoji: '🍟',
@@ -136,7 +158,7 @@ function getFoodResult(food, description = '', preparation = '') {
     };
   }
 
-  if (healthyFoods.includes(cleanedFood) || hasHealthyPreparation) {
+  if (isListedFood(cleanedFood, healthyFoods) || hasHealthyPreparation) {
     return {
       title: 'Not junk food',
       emoji: '🥗',
